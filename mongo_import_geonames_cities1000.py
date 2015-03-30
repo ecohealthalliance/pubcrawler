@@ -71,24 +71,29 @@ if __name__ == '__main__':
     parser.add_argument(
         "--db_name", default='geonames'
     )
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
+    # Not in iPython notebook:
+    # args = parser.parse_args()
     print "This takes me about a half hour to run on my machine..."
     db = pymongo.Connection(args.mongo_url)[args.db_name]
-    collection = db['allCountries']
+    c = pymongo.MongoClient(args.mongo_url)
+    c[args.db_name]
+    db = c.geonames
+    collection = db.cities1000
     collection.drop()
-    for i, geoname in enumerate(read_geonames_csv('cities1000.txt')):
+    for i, geoname in enumerate(read_geonames_csv('./cities1000.txt')):
         total_row_estimate = 10000000
         if i % (total_row_estimate / 10) == 0:
             print i, '/', total_row_estimate, '+ geonames imported'
         collection.insert(geoname)
-    db.allCountries.ensure_index('name')
-    db.allCountries.ensure_index('alternatenames')
+    collection.ensure_index('name')
+    collection.ensure_index('alternatenames')
     # Test that the collection contains some of the locations we would expect,
     # and that it completes in a reasonable amount of time.
     # TODO: Run the geoname extractor here.
     start_time = time.time()
-    test_names = ['Riu Valira del Nord', 'Bosque de Soldeu', 'New York', 'Africa', 'Canada', 'Kirkland']
-    query = db.allCountries.find({
+    test_names = ['El Tarter', 'Riu Valira del Nord', 'Bosque de Soldeu', 'New York', 'Africa', 'Canada', 'Kirkland']
+    query = collection.find({
         '$or' : [
             {
                 'name' : { '$in' : test_names }
@@ -109,3 +114,5 @@ if __name__ == '__main__':
         print "Missing names:", difference
     if time.time() - start_time > 15:
         print "Warning: query took over 15 seconds."
+    # That's fine.
+    c.disconnect()
