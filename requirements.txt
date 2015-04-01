@@ -1,8 +1,13 @@
 --index-url https://pypi.python.org/simple/
 nltk>=3.0
 requests
-pattern
 pymongo
 pyyaml
 unicodecsv
 scikit-learn
+beautifulsoup4
+
+future
+builtins
+past
+six
