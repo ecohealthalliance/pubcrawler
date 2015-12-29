@@ -1,13 +1,9 @@
---index-url https://pypi.python.org/simple/
-nltk>=3.0
+nltk
 requests
 pymongo
 pyyaml
 unicodecsv
 scikit-learn
 beautifulsoup4
-
-future
-builtins
-past
-six
+ipython
+jupyter
