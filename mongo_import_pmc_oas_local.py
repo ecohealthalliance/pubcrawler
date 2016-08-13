@@ -6,8 +6,52 @@ If run as a script, crawls the directory tree provided as an argument, and impor
 If imported, provides classes for importing a .nxml file into a Mongo collection.
 """
 
-import sys
-from pymongo import MongoClient
-import time
+import os
+import pymongo
 
-db = MongoClient()
+def mongo_document_from_nxml(file_path):
+    base = os.path.basename(file_path)
+    name = os.path.splitext(base)[0]
+    with open(file_path, 'r') as f:
+        nxml = f.read()
+    article = {
+        '_id': name,
+        'nxml': nxml
+    }
+    return(article)
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--pmc_path', default='/Volumes/Transcend/pmc-subset'
+    )
+    args = parser.parse_args()
+
+    articles = pymongo.MongoClient().pmc.articles
+    articles.drop()
+
+    for (dirpath, dirnames, filenames) in os.walk(args.pmc_path):
+        for name in filenames:
+            print(name)
+            filepath = os.path.join(dirpath, name)
+            if filepath.endswith('nxml'):
+                article = mongo_document_from_nxml(filepath)
+                articles.insert(article)
+    print(articles.count())
+
+    # article_paths = []
+    # for (dirpath, dirnames, filenames) in os.walk(args.pmc_path):
+    #     for name in filenames:
+    #         # print(name)
+    #         filepath = os.path.join(dirpath, name)
+    #         if filepath.endswith('nxml'):
+    #             article_paths.append(filepath)
+    # # print(article_paths)
+
+    # articles = pymongo.MongoClient().pmc.articles
+    # articles.drop()
+    # for path in article_paths:
+    #     article = mongo_document_from_nxml(path)
+    #     articles.insert(article)
+    # print(articles.count())
