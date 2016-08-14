@@ -57,3 +57,6 @@ target/
 # Sublime Text
 *.sublime-project
 *.sublime-workspace
+
+# Jupyter Notebooks
+.ipynb_checkpoints
