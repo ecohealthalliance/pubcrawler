@@ -39,19 +39,3 @@ if __name__ == '__main__':
                 article = mongo_document_from_nxml(filepath)
                 articles.insert(article)
     print(articles.count())
-
-    # article_paths = []
-    # for (dirpath, dirnames, filenames) in os.walk(args.pmc_path):
-    #     for name in filenames:
-    #         # print(name)
-    #         filepath = os.path.join(dirpath, name)
-    #         if filepath.endswith('nxml'):
-    #             article_paths.append(filepath)
-    # # print(article_paths)
-
-    # articles = pymongo.MongoClient().pmc.articles
-    # articles.drop()
-    # for path in article_paths:
-    #     article = mongo_document_from_nxml(path)
-    #     articles.insert(article)
-    # print(articles.count())
