@@ -20,6 +20,13 @@ def mongo_document_from_nxml(file_path):
     }
     return(article)
 
+def sample_articles_from_collection(n, articles):
+    pipeline = [
+        {"$sample": {"size": n}},
+        {"$out": "articlesubset"}
+    ]
+    articles.aggregate(pipeline)
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
