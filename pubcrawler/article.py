@@ -2,8 +2,10 @@
 instantiate, pass a dict containing the elements `_id` and `nxml`, the latter
 being the contents of the .nxml file from the PMC OAS. Conveniently, this is
 what you get when you read an article out of the Mongo database created by the
-`mongo_import_pmc_oas_local.py` script. """
+`mongo_import_pmc_oas_local.py` script. 
 
+This class is going to serve as a base class. Subclasses will provide
+different methods to extract GeoNames from this."""
 class Article:
     
     def __init__(self, article_dict):
