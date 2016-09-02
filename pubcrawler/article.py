@@ -1,3 +1,9 @@
+from bs4 import BeautifulSoup
+import lxml
+from datetime import date
+from annotator import annotator, geoname_annotator, ngram_annotator, token_annotator, ne_annotator
+import nltk
+
 """ This class represents an article or publication from PubMed Central. To
 instantiate, pass a dict containing the elements `_id` and `nxml`, the latter
 being the contents of the .nxml file from the PMC OAS. Conveniently, this is
@@ -52,3 +58,22 @@ class Article:
         else:
             body = None
         return(body)
+
+
+""" This subclass of Article has a method to extract GeoNames with Annie and put themself in a list called `self.geonames`."""
+class GeoArticle(Article):
+    def __init__(self, article_dict):
+        Article.__init__(self, article_dict)
+
+    def annotate_geonames(self):
+        text = self.body()
+        self.annotations = annotator.AnnoDoc(text)
+        TokenAnnotator = token_annotator.TokenAnnotator(tokenizer=nltk.tokenize.RegexpTokenizer('\w+|[^\w\s]+'))
+        NgramAnnotator = ngram_annotator.NgramAnnotator()
+        NEAnnotator = ne_annotator.NEAnnotator()
+        GeonameAnnotator = geoname_annotator.GeonameAnnotator()
+        TokenAnnotator.annotate(self.annotations)
+        NgramAnnotator.annotate(self.annotations)
+        NEAnnotator.annotate(self.annotations)
+        GeonameAnnotator.annotate(self.annotations)
+        self.geonames = self.annotations.tiers['geonames']
