@@ -19,6 +19,20 @@ class Article:
         self.nxml = article_dict['nxml']
         self.soup = BeautifulSoup(self.nxml, 'lxml-xml')
 
+    def __getattr__(self, name):
+        return(self.get_text_from_tags(name))
+        
+    def get_text_from_tags(self, tag_name):
+        tags = self.soup.find_all(tag_name)
+        if tags is not None:
+            tags_text = []
+            for tag in tags:
+                tags_text.append(tag.get_text("\n\n"))
+            text = "\n\n".join(tags_text)
+        else:
+            text = None
+        return(text)
+
     def pub_ids(self):
         pub_ids = {}
         for row in self.soup.front.find_all('article-id'):
@@ -37,7 +51,10 @@ class Article:
             # pub_date = date(year, month, day)
             pub_dates[pub_type] = date(year, month, day)
         return(pub_dates)
-    
+
+    """
+    This is an assigned attribute because there are sometimes many article-title tags, but only the one in the front mater is relevant for us.
+    """
     def article_title(self):
         if self.soup.front.find('article-title') is not None:
             article_title = self.soup.front.find('article-title').get_text
@@ -45,28 +62,26 @@ class Article:
             article_title = None
         return(article_title)
 
-    def abstract(self):
-        if self.soup.abstract is not None:
-            abstract = self.soup.abstract.get_text()
+    """
+    The keywords method returns a list of keyword tags in the article. By default, it is restricted to keywords in the <front> element, but the "containing_tag" argument can be passed "" to search all. In the test set of 1000 articles, only 1 had keywords not in front matter. 503 had keywords at all. There seem to be 0 about infectious disease.
+    """
+    def keywords(self, containing_tag="front"):
+        keyword_tags = self.soup.find(containing_tag).find_all("kwd")
+        keywords = []
+        for tag in keyword_tags:
+            keywords.append(tag.get_text())
+        return(keywords)
+
+    def article_type(self):
+        article_tag = self.soup.find("article")
+        if article_tag is not None:
+            article_type = article_tag.get("article-type")
         else:
-            abstract = None
-        return(abstract)
+            article_type = None
+        return(article_type)
 
-    def body(self):
-        if self.soup.body is not None:
-            body = self.soup.body.get_text()
-        else:
-            body = None
-        return(body)
-
-
-""" This subclass of Article has a method to extract GeoNames with Annie and put themself in a list called `self.geonames`."""
-class GeoArticle(Article):
-    def __init__(self, article_dict):
-        Article.__init__(self, article_dict)
-
-    def annotate_geonames(self):
-        text = self.body()
+    def annotate_geonames(self, tag_name):
+        text = self.get_text_from_tags(tag_name)
         self.annotations = annotator.AnnoDoc(text)
         TokenAnnotator = token_annotator.TokenAnnotator(tokenizer=nltk.tokenize.RegexpTokenizer('\w+|[^\w\s]+'))
         NgramAnnotator = ngram_annotator.NgramAnnotator()

@@ -16,7 +16,13 @@ To import the PubMed Central Open Access Subset into a database, run `mongo_impo
 
 The script will drop the collection `articles` in the database `pmc` and replace it with every .nxml file in every subdirectory of the specified directory, using the file basename as the `_id` and the file contents as the `nxml` property.
 
-The `dump/pmc/` directory contains a mongodump of the subset of 1000 articles which I'm going to use as I'm building the package. **TODO: Move this to an S3 bucket.**
+The `dump/pmc/` directory contains a mongodump of the subset of 10000 articles which I'm going to use as I'm building the package. **TODO: Move this to an S3 bucket.**
+```
+mongodump --db pmc --collection articlesubset --gzip
+```
+Sometimes it gets stuck.
+```
+
 
 ### Annie
 
