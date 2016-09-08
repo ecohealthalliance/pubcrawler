@@ -20,9 +20,7 @@ The `dump/pmc/` directory contains a mongodump of the subset of 10000 articles w
 ```
 mongodump --db pmc --collection articlesubset --gzip
 ```
-Sometimes it gets stuck.
-```
-
+Restore this to a local database.
 
 ### Annie
 
