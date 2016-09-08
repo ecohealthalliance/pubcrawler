@@ -21,6 +21,12 @@ To address some of the reviewers' concerns, I also want to compute some metrics 
 
 - Refactor Annie's `geoname_annotator()` slightly — at least so that it can return *all* matched Geonames, and feature vectors, before the stepwise culling process.
 
+Maybe a good way to organize the geoname extractor would be:
+- A method to *search* for Geonames. In other words, given the text, what is the broadest set of matches?
+- Extracting whatever features for ranking might also be methods. Features come both from the Geonames dataset and the text itself.
+- Returning whatever Geonames are in the current set should be a method, I think.
+- The current stepwise elimination method should probably be a method, returning the reduced list in its current form.
+
 ### Subsetting by Topic
 
 I will likely do this either by doing full-text searches for terms related to infectious disease, or with the `<kwd>` tag in the XML papers.
