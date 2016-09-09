@@ -60,3 +60,6 @@ target/
 
 # Jupyter Notebooks
 .ipynb_checkpoints
+
+# Data Directory
+data/
