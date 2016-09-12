@@ -3,6 +3,7 @@ requests
 pymongo
 pyyaml
 unicodecsv
+scipy
 scikit-learn
 beautifulsoup4
 ipython

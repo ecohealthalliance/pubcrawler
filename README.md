@@ -18,7 +18,12 @@ The script will drop the collection `articles` in the database `pmc` and replace
 
 The `data/` directory isn't under version control. Find it at the Dropbox link below.
 
-The `data/dump/pmc/` directory contains a mongodump of the subset of 10000 articles which I'm going to use as I'm building the package. **TODO: Move this to an S3 bucket.** Since that directory isn't being tracked, for now, it's available at this [Dropbox link](https://www.dropbox.com/sh/euraoigy8i17j32/AABEr6tmXamHcP22a6SpgMhpa?dl=0)
+The `data/dump/pmc/` directory contains a mongodump of the subset of 10000 articles which I'm going to use as I'm building the package.
+
+Since that directory isn't being tracked, for now, it's available at this [Dropbox link](https://www.dropbox.com/sh/euraoigy8i17j32/AABEr6tmXamHcP22a6SpgMhpa?dl=0)
+
+There is a copy of it available in our pubcrawler bucket which can be downloaded via the command `aws s3 cp s3://pubcrawler/data.zip .`.
+
 ```
 mongodump --db pmc --collection articlesubset --gzip
 ```
@@ -28,6 +33,8 @@ Restore this to a local database.
 
 Use the `python3` branch of Annie. Install by navigating to Annie's root directory and running `python setup.py install` with the `pubcrawler` virtualenv active.
 
-As of 2016-09-02, Annie's TokenAnnotator won't work with its default regular expression. I'm using `token_annotator.TokenAnnotator(tokenizer=nltk.tokenize.RegexpTokenizer('\w+|[^\w\s]+'))` instead, which removes the ability to tokenize whole http words.
+Annie uses some nltk components taht require running the following command in the virtualenv to install:
 
-Annie's `POSAnnotator()` requires that you've run `nltk.download()`.
+```
+python -c "import nltk; nltk.download('maxent_ne_chunker', 'maxent_treebank_pos_tagger', 'words', 'punkt', 'averaged_perceptron_tagger')"
+```
