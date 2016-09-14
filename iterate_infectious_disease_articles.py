@@ -31,7 +31,12 @@ def get_annotation_keywords():
         ; oboInOwl:hasNarrowSynonym|oboInOwl:hasRelatedSynonym|oboInOwl:hasExactSynonym|rdfs:label ?label
     }
     """)
-    return [str(r[1]) for r in qres]
+    def remove_parenthetical_notes(label):
+        label = re.sub(r"\s\(.*\)","", label)
+        label = re.sub(r"\s\[.*\]","", label)
+        assert(len(label) > 0)
+        return label
+    return list(set([remove_parenthetical_notes(str(r[1])) for r in qres]))
 
 def str_escape(s):
     return json.dumps(s)[1:-1]
@@ -60,8 +65,14 @@ def resolve_keyword(keyword):
 
 def iterate_infectious_disease_articles(collection):
     keyword_annotator = KeywordAnnotator(keywords=get_annotation_keywords())
+    total_article_count = 0
+    article_with_abstract_count = 0
+    infectious_disease_article_count = 0
     for article in collection.find():
+        total_article_count += 1
         abstract = pubcrawler.Article(article).get_text_from_tags('abstract')
+        if len(abstract) > 0:
+            article_with_abstract_count += 1
         anno_doc = AnnoDoc(abstract)
         anno_doc.add_tier(keyword_annotator)
         infectious_diseases = [
@@ -69,6 +80,8 @@ def iterate_infectious_disease_articles(collection):
             for disease in anno_doc.tiers['keywords'].spans
         ]
         if len(infectious_diseases) > 0:
+            infectious_disease_article_count += 1
+            #print(infectious_disease_article_count, "/", total_article_count, ",", article_with_abstract_count)
             yield article, infectious_diseases
 
 if __name__ == '__main__':
@@ -84,3 +97,4 @@ if __name__ == '__main__':
     db = pymongo.MongoClient(args.mongo_url)[args.db_name]
     for article, infectious_diseases in iterate_infectious_disease_articles(db.articlesubset):
         print(article['_id'], infectious_diseases)
+        print("")
