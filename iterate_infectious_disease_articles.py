@@ -1,6 +1,6 @@
 """
 Iterate over the PubMED articles that mention infecious diseases from the
-disease ontology in their abstracts.
+disease ontology.
 """
 import rdflib
 from pylru import lrudecorator
@@ -66,23 +66,25 @@ def resolve_keyword(keyword):
 def iterate_infectious_disease_articles(collection):
     keyword_annotator = KeywordAnnotator(keywords=get_annotation_keywords())
     total_article_count = 0
-    article_with_abstract_count = 0
+    article_with_body_count = 0
     infectious_disease_article_count = 0
     for article in collection.find():
         total_article_count += 1
-        abstract = pubcrawler.Article(article).get_text_from_tags('abstract')
-        if len(abstract) > 0:
-            article_with_abstract_count += 1
-        anno_doc = AnnoDoc(abstract)
-        anno_doc.add_tier(keyword_annotator)
-        infectious_diseases = [
-            (disease.text, resolve_keyword(disease.text))
-            for disease in anno_doc.tiers['keywords'].spans
-        ]
-        if len(infectious_diseases) > 0:
-            infectious_disease_article_count += 1
-            #print(infectious_disease_article_count, "/", total_article_count, ",", article_with_abstract_count)
-            yield article, infectious_diseases
+        pc_article = pubcrawler.Article(article)
+        if pc_article.article_type() == "research-article":
+            body = pc_article.get_text_from_tags('body')
+            if len(body) > 0:
+                article_with_body_count += 1
+                anno_doc = AnnoDoc(body)
+                anno_doc.add_tier(keyword_annotator)
+                infectious_diseases = [
+                    (disease.text, resolve_keyword(disease.text))
+                    for disease in anno_doc.tiers['keywords'].spans
+                ]
+                if len(infectious_diseases) > 0:
+                    infectious_disease_article_count += 1
+                    #print(infectious_disease_article_count, "/", total_article_count, ",", article_with_body_count)
+                    yield article, infectious_diseases
 
 if __name__ == '__main__':
     import argparse
