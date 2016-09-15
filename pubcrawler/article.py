@@ -27,7 +27,7 @@ class Article:
         if tags is not None:
             tags_text = []
             for tag in tags:
-                tags_text.append(tag.get_text("\n\n"))
+                tags_text.append(tag.get_text())
             text = "\n\n".join(tags_text)
         else:
             text = None

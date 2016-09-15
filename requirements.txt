@@ -8,3 +8,6 @@ scikit-learn
 beautifulsoup4
 ipython
 jupyter
+rdflib
+pylru
+lxml
