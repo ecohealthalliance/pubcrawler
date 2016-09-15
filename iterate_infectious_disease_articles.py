@@ -63,28 +63,66 @@ def resolve_keyword(keyword):
         print(qres)
     return qres
 
+""" This gets the list of tuples returned by the function below and transforms
+it into a dict, appropriate for dumping into a Mongo document. """
+def annotated_keyword_list_to_dict(keyword_list):
+    keyword_dict = {}
+    for keyword_entity in keyword_list:
+        keyword, uri = keyword_entity
+        if keyword in keyword_dict:
+            continue
+        else:
+            keyword_dict[keyword] = uri[0].entity.toPython()
+    return(keyword_dict)
+
+"""
+Currently, this writes the following set of metadata to the appropriate
+mongo document:
+
+- meta
+    - article-ids
+    - article-type
+    - keywords
+- annotations
+    - disease-ontology-keywords
+"""
+
+def write_article_meta_to_mongo(article, collection):
+    pc_article = pubcrawler.Article(article)
+    anno_doc = AnnoDoc(pc_article.body)
+    anno_doc.add_tier(keyword_annotator)
+    infectious_diseases = [
+        (disease.text, resolve_keyword(disease.text))
+        for disease in anno_doc.tiers['keywords'].spans
+    ]
+    disease_ontology_keywords = None if len(infectious_diseases) == 0 else annotated_keyword_list_to_dict(infectious_diseases)
+    collection.update_one({'_id': 'test'},
+        {
+        '$set':
+            {
+            'meta':
+                {
+                'article-ids': pc_article.pub_ids(),
+                'article-type': pc_article.article_type(),
+                # 'pub-dates': pc_article.pub_dates()
+                # Need to fix stuff with dates in Mongo
+                'keywords': pc_article.keywords()
+                },
+            'annotations':
+                {
+                'disease-ontology-keywords': disease_ontology_keywords
+                }
+            },
+        })
+
 def iterate_infectious_disease_articles(collection):
-    keyword_annotator = KeywordAnnotator(keywords=get_annotation_keywords())
-    total_article_count = 0
-    article_with_body_count = 0
-    infectious_disease_article_count = 0
+    total_articles = collection.count()
+    processed_articles = 0
     for article in collection.find():
-        total_article_count += 1
-        pc_article = pubcrawler.Article(article)
-        if pc_article.article_type() == "research-article":
-            body = pc_article.get_text_from_tags('body')
-            if len(body) > 0:
-                article_with_body_count += 1
-                anno_doc = AnnoDoc(body)
-                anno_doc.add_tier(keyword_annotator)
-                infectious_diseases = [
-                    (disease.text, resolve_keyword(disease.text))
-                    for disease in anno_doc.tiers['keywords'].spans
-                ]
-                if len(infectious_diseases) > 0:
-                    infectious_disease_article_count += 1
-                    #print(infectious_disease_article_count, "/", total_article_count, ",", article_with_body_count)
-                    yield article, infectious_diseases
+        processed_articles += 1
+        print("Processing article {} of {} ({:.2}%)...".format(processed_articles, total_articles, processed_articles / total_articles), end="")
+        write_article_meta_to_mongo(article, collection=collection)
+        print(" Done!")
 
 if __name__ == '__main__':
     import argparse
@@ -95,8 +133,10 @@ if __name__ == '__main__':
     parser.add_argument(
         "--db_name", default='pmc'
     )
+    parser.add_argument(
+        "--update_collection", dest="update_collection", action="store_true"
+    )
     args = parser.parse_args()
     db = pymongo.MongoClient(args.mongo_url)[args.db_name]
-    for article, infectious_diseases in iterate_infectious_disease_articles(db.articlesubset):
-        print(article['_id'], infectious_diseases)
-        print("")
+    keyword_annotator = KeywordAnnotator(keywords=get_annotation_keywords())
+    iterate_infectious_disease_articles(db.articlesubset)
