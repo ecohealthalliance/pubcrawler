@@ -96,7 +96,7 @@ def write_article_meta_to_mongo(article, collection):
         for disease in anno_doc.tiers['keywords'].spans
     ]
     disease_ontology_keywords = None if len(infectious_diseases) == 0 else annotated_keyword_list_to_dict(infectious_diseases)
-    collection.update_one({'_id': 'test'},
+    collection.update_one({'_id': article['_id']},
         {
         '$set':
             {
@@ -116,9 +116,12 @@ def write_article_meta_to_mongo(article, collection):
         })
 
 def iterate_infectious_disease_articles(collection):
-    total_articles = collection.count()
+    query = {}
+    if args.no_reannotation:
+        query = {'meta': {'$exists': False}}
+    total_articles = collection.count(query)
     processed_articles = 0
-    for article in collection.find():
+    for article in collection.find(query):
         processed_articles += 1
         print("Processing article {} of {} ({:.2}%)...".format(processed_articles, total_articles, processed_articles / total_articles), end="")
         write_article_meta_to_mongo(article, collection=collection)
@@ -134,7 +137,7 @@ if __name__ == '__main__':
         "--db_name", default='pmc'
     )
     parser.add_argument(
-        "--update_collection", dest="update_collection", action="store_true"
+        "--no_reannotation", dest="no_reannotation", action="store_true"
     )
     args = parser.parse_args()
     db = pymongo.MongoClient(args.mongo_url)[args.db_name]
