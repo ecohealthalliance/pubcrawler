@@ -73,7 +73,7 @@ def annotated_keywords_to_dict_list(keywords):
         if keyword in seen_keys:
             continue
         else:
-            keys.append(keyword)
+            seen_keys.append(keyword)
             keyword_dict = {
                 "keyword": keyword,
                 "uri": uri[0].entity.toPython()
