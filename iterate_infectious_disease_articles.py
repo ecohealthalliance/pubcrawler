@@ -64,16 +64,22 @@ def resolve_keyword(keyword):
     return qres
 
 """ This gets the list of tuples returned by the function below and transforms
-it into a dict, appropriate for dumping into a Mongo document. """
-def annotated_keyword_list_to_dict(keyword_list):
-    keyword_dict = {}
-    for keyword_entity in keyword_list:
+it into a list of dicts, appropriate for dumping into a Mongo document. """
+def annotated_keywords_to_dict_list(keywords):
+    seen_keys = []
+    keyword_list = []
+    for keyword_entity in keywords:
         keyword, uri = keyword_entity
-        if keyword in keyword_dict:
+        if keyword in seen_keys:
             continue
         else:
-            keyword_dict[keyword] = uri[0].entity.toPython()
-    return(keyword_dict)
+            keys.append(keyword)
+            keyword_dict = {
+                "keyword": keyword,
+                "uri": uri[0].entity.toPython()
+            }
+            keyword_list.append(keyword_dict)
+    return(keyword_list)
 
 """
 Currently, this writes the following set of metadata to the appropriate
@@ -95,7 +101,7 @@ def write_article_meta_to_mongo(article, collection):
         (disease.text, resolve_keyword(disease.text))
         for disease in anno_doc.tiers['keywords'].spans
     ]
-    disease_ontology_keywords = None if len(infectious_diseases) == 0 else annotated_keyword_list_to_dict(infectious_diseases)
+    disease_ontology_keywords = None if len(infectious_diseases) == 0 else annotated_keywords_to_dict_list(infectious_diseases)
     collection.update_one({'_id': article['_id']},
         {
         '$set':
@@ -126,6 +132,16 @@ def iterate_infectious_disease_articles(collection):
         print("Processing article {} of {} ({:.2}%)...".format(processed_articles, total_articles, processed_articles / total_articles), end="")
         write_article_meta_to_mongo(article, collection=collection)
         print(" Done!")
+
+def strip_article_meta(collection):
+    collection.update_many({'meta': {'$exists': True}},
+        {
+        '$unset':
+            {
+            'meta': "",
+            'annotations': ""
+            }
+        })
 
 if __name__ == '__main__':
     import argparse
