@@ -29,6 +29,10 @@ mongodump --db pmc --collection articlesubset --gzip
 ```
 Restore this to a local database.
 
+### Geonames
+
+Use the `mongo_import_geonames.py` script to import Geonames's allCountries csv into a Mongo collection. Follow up by creating an index on `geonameid`.
+
 ### Annie
 
 Use the `python3` branch of Annie. Install by navigating to Annie's root directory and running `python setup.py install` with the `pubcrawler` virtualenv active.
