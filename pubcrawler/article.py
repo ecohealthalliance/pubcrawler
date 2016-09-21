@@ -79,16 +79,3 @@ class Article:
         else:
             article_type = None
         return(article_type)
-
-    def annotate_geonames(self, tag_name):
-        text = self.get_text_from_tags(tag_name)
-        self.annotations = annotator.AnnoDoc(text)
-        TokenAnnotator = token_annotator.TokenAnnotator(tokenizer=nltk.tokenize.RegexpTokenizer('\w+|[^\w\s]+'))
-        NgramAnnotator = ngram_annotator.NgramAnnotator()
-        NEAnnotator = ne_annotator.NEAnnotator()
-        GeonameAnnotator = geoname_annotator.GeonameAnnotator()
-        TokenAnnotator.annotate(self.annotations)
-        NgramAnnotator.annotate(self.annotations)
-        NEAnnotator.annotate(self.annotations)
-        GeonameAnnotator.annotate(self.annotations)
-        self.geonames = self.annotations.tiers['geonames']

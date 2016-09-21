@@ -11,7 +11,6 @@ from annotator.geoname_annotator import GeoSpan
 from annotator.annotator import AnnoDoc
 import re
 import json
-import pymongo
 import numpy
 
 @lrudecorator(1)
@@ -67,9 +66,12 @@ def resolve_keyword(keyword):
         print(qres)
     return qres
 
-""" This gets the list of tuples returned by the function below and transforms
-it into a list of dicts, appropriate for dumping into a Mongo document. """
-def annotated_keywords_to_dict_list(keywords):
+
+@lrudecorator(1)
+def keyword_annotator():
+    return(KeywordAnnotator(keywords=get_annotation_keywords()))
+
+def keywords_to_list(keywords):
     seen_keys = []
     keyword_list = []
     for keyword_entity in keywords:
@@ -85,49 +87,22 @@ def annotated_keywords_to_dict_list(keywords):
             keyword_list.append(keyword_dict)
     return(keyword_list)
 
-"""
-Currently, this writes the following set of metadata to the appropriate
-mongo document:
-
-- meta
-    - article-ids
-    - article-type
-    - keywords
-- annotations
-    - disease-ontology-keywords
-"""
-
 def extract_disease_ontology_keywords(article):
     pc_article = pubcrawler.Article(article)
     anno_doc = AnnoDoc(pc_article.body)
-    anno_doc.add_tier(keyword_annotator)
+    anno_doc.add_tier(keyword_annotator())
     infectious_diseases = [
         (disease.text, resolve_keyword(disease.text))
         for disease in anno_doc.tiers['keywords'].spans
     ]
-    # disease_ontology_keywords = None if len(infectious_diseases) == 0 else annotated_keywords_to_dict_list(infectious_diseases)
-    if len(infectious_diseases) == 0:
-        disease_ontology_keywords = None
-    else:
-        seen_keys = []
-        disease_ontology_keywords = []
-        for keyword_entity in infectious_diseases:
-            keyword, uri = keyword_entity
-            if keyword in seen_keys:
-                continue
-            else:
-                seen_keys.append(keyword)
-                keyword_dict = {
-                    "keyword": keyword,
-                    "uri": uri[0].entity.toPython()
-                }
-                keyword_list.append(keyword_dict)
+    disease_ontology_keywords = None if len(infectious_diseases) == 0 else keywords_to_list(infectious_diseases)
     return({
         'keywords':
         {
             'disease-ontology': disease_ontology_keywords
         }
     })
+
 
 def extract_meta(article):
     pc_article = pubcrawler.Article(article)
@@ -142,14 +117,19 @@ def extract_meta(article):
         }
     })
 
+# This enables us to lazily call geoname_annotator() instead of having an
+# object that's instantiated every time the library is loaded.
+@lrudecorator(1)
+def geoname_annotator():
+    return(GeonameAnnotator())
 
 def extract_geonames(article):
     pc_article = pubcrawler.Article(article)
     anno_doc = AnnoDoc(pc_article.body)
-    candidate_locations = geoname_annotator.get_candidate_geonames(anno_doc)
+    candidate_locations = geoname_annotator().get_candidate_geonames(anno_doc)
 
     # Generate and score features
-    features = geoname_annotator.extract_features(candidate_locations)
+    features = geoname_annotator().extract_features(candidate_locations)
     feature_weights = dict(
         population_score=2.0,
         synonymity=1.0,
@@ -182,7 +162,7 @@ def extract_geonames(article):
                 span.start, span.end, anno_doc, location
             )
             geo_spans.append(geo_span)
-    culled_geospans = geoname_annotator.cull_geospans(geo_spans)
+    culled_geospans = geoname_annotator().cull_geospans(geo_spans)
     # props_to_omit = ['spans', 'alternatenames', 'alternateLocations']
     # for geospan in culled_geospans:
     #     # The while loop removes the properties from the parentLocations.
@@ -241,10 +221,9 @@ def combine_extracted_info(article, extractors):
 
 """
 Notes:
-- Should take an iterable
-- Should return a list
+- Takes a cursor and a list of extractors
 """
-def iterate_articles(cursor, extractors):
+def extract_and_write_multiple(cursor, extractors):
     for article in cursor:
         to_write = combine_extracted_info(article, extractors)
         cursor.collection.update_one({'_id': article['_id']}, {'$set': to_write})
@@ -260,3 +239,21 @@ def strip_article_info(collection):
             'geonames': ""
             }
         })
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--mongo_url", default='localhost'
+    )
+    parser.add_argument(
+        "--db_name", default='pmc'
+    )
+    # parser.add_argument(
+    #     "--no_reannotation", default=None
+    # )
+    args = parser.parse_args()
+    db = pymongo.MongoClient(args.mongo_url)[args.db_name]
+    keyword_annotator = KeywordAnnotator(keywords=get_annotation_keywords())
+    geoname_annotator = GeonameAnnotator()
+    articles = db.article
