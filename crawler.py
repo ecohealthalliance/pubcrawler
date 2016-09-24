@@ -36,12 +36,13 @@ def chunk_slices(length, by):
     slices = [slice(items[i], items[i+1]) for i in range(0, len(items)-1)]
     return(slices)
 
-def worker(url, db, collection, to_extract, query, slice_queue):
+def worker(url, db, collection, to_extract, query, index_queue):
     articles = pymongo.MongoClient()[db][collection]
-    for s in iter(slice_queue.get, 'STOP'):
-        print(s)
-        cursor = articles.find(query)[s]
-        ex.extract_and_write_multiple(cursor, to_extract)
+    for i in iter(index_queue.get, 'STOP'):
+        # print(i)
+        article = articles.find(query)[i]
+        to_write = ex.combine_extracted_info(article, to_extract)
+        articles.update_one({'_id': article['_id']}, {'$set': to_write})
 
 
 if __name__ == '__main__':
@@ -70,6 +71,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     print(args)
+
     if args.x is not None:
         extractor_funs = [eval(x) for x in ['ex.' + x for x in args.x]]
     else:
@@ -83,20 +85,25 @@ if __name__ == '__main__':
 
     print("Making connection.")
     articles = pymongo.MongoClient(args.u)[args.d][args.c]
+
     print("About to count.")
     total_for_query = articles.count(query)
     num_to_annotate = args.l if args.l is not None else total_for_query
     num_workers = int(args.w)
     print("Total for query is {}.".format(total_for_query))
-    
-    print("About to chunk.")
 
     queue = mp.Queue()
-    for i in chunk_slices(num_to_annotate, by = 100):
+    for i in range(num_to_annotate):
         queue.put(i)
     for w in range(num_workers):
         queue.put('STOP')
 
+    # # Chunking, which we don't do any more.
+    # queue = mp.Queue()
+    # for i in chunk_slices(num_to_annotate, by = 100):
+    #     queue.put(i)
+    # for w in range(num_workers):
+    #     queue.put('STOP')
 
     worker_args = (
         args.u,
