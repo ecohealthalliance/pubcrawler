@@ -29,6 +29,8 @@ mongodump --db pmc --collection articlesubset --gzip
 ```
 Restore this to a local database.
 
+Download the Disease Ontology OWL file: `http://www.berkeleybop.org/ontologies/doid.owl`
+
 ### Geonames
 
 Use the `mongo_import_geonames.py` script to import Geonames's allCountries csv into a Mongo collection. Follow up by creating an index on `geonameid`.
