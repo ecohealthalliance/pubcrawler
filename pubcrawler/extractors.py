@@ -16,10 +16,8 @@ import numpy
 @lrudecorator(1)
 def get_disease_ontology():
     disease_ontology = rdflib.Graph()
-    disease_ontology.parse(
-        "http://purl.obolibrary.org/obo/doid.owl",
-        format="xml"
-    )
+    with open("doid.owl") as f:
+        disease_ontology.parse(f, format="xml")
     return(disease_ontology)
 
 def get_annotation_keywords():

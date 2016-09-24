@@ -29,7 +29,7 @@ mongodump --db pmc --collection articlesubset --gzip
 ```
 Restore this to a local database.
 
-Download the Disease Ontology OWL file: `http://www.berkeleybop.org/ontologies/doid.owl`
+Download the Disease Ontology OWL file: `curl http://www.berkeleybop.org/ontologies/doid.owl > doid.owl`
 
 ### Geonames
 
