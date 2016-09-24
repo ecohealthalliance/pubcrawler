@@ -39,7 +39,7 @@ def chunk_slices(length, by):
 def worker(url, db, collection, to_extract, query, slice_queue):
     articles = pymongo.MongoClient()[db][collection]
     for s in iter(slice_queue.get, 'STOP'):
-        # print(s)
+        print(s)
         cursor = articles.find(query)[s]
         ex.extract_and_write_multiple(cursor, to_extract)
 
@@ -81,10 +81,15 @@ if __name__ == '__main__':
     else:
         query = {}
 
+    print("Making connection.")
     articles = pymongo.MongoClient(args.u)[args.d][args.c]
+    print("About to count.")
     total_for_query = articles.count(query)
     num_to_annotate = args.l if args.l is not None else total_for_query
     num_workers = int(args.w)
+    print("Total for query is {}.".format(total_for_query))
+    
+    print("About to chunk.")
 
     queue = mp.Queue()
     for i in chunk_slices(num_to_annotate, by = 100):
@@ -102,13 +107,16 @@ if __name__ == '__main__':
         queue,
     )
 
+    print("About to start.")
+
     for w in range(num_workers):
         mp.Process(target=worker, args=worker_args).start()
 
-    while not queue.empty():
-        total_for_query_now = articles.count(query)
-        done = total_for_query - total_for_query_now
-        left = num_to_annotate - done
-        print("Annotated {} out of {} articles ({:.2%}). {} remaining.".format(done,
-            num_to_annotate, done / num_to_annotate, left))
-        time.sleep(5)
+    # while not queue.empty():
+    #     print("Still going...")
+    #     # total_for_query_now = articles.count(query)
+    #     # done = total_for_query - total_for_query_now
+    #     # left = num_to_annotate - done
+    #     # print("Annotated {} out of {} articles ({:.2%}). {} remaining.".format(done,
+    #         # num_to_annotate, done / num_to_annotate, left))
+    #     time.sleep(5)
