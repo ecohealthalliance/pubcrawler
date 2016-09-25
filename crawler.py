@@ -38,13 +38,11 @@ def chunk_slices(length, by):
 
 def worker(url, db, collection, to_extract, query, index_queue):
     articles = pymongo.MongoClient()[db][collection]
-    cursor = articles.find(query)
-    print("Cursor count: {}".format(cursor.count()))
     for i in iter(index_queue.get, 'STOP'):
         print("Trying article {}.".format(i))
-        article = cursor[i]
+        article = articles.find_one(i)
         to_write = ex.combine_extracted_info(article, to_extract)
-        articles.update_one({'_id': article['_id']}, {'$set': to_write})
+        articles.update_one(i, {'$set': to_write})
 
 
 if __name__ == '__main__':
@@ -88,14 +86,12 @@ if __name__ == '__main__':
     print("Making connection.")
     articles = pymongo.MongoClient(args.u)[args.d][args.c]
 
-    print("About to count.")
-    total_for_query = articles.count(query)
-    num_to_annotate = args.l if args.l is not None else total_for_query
-    num_workers = int(args.w)
-    print("Total for query is {}.".format(total_for_query))
+    print("Getting IDs for query.")
+    cursor = articles.find(query, ["_id"], limit=0, no_cursor_timeout=True)
 
+    num_workers = int(args.w)
     queue = mp.Queue()
-    for i in range(num_to_annotate):
+    for i in cursor:
         queue.put(i)
     for w in range(num_workers):
         queue.put('STOP')
