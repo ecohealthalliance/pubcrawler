@@ -39,8 +39,25 @@ Use the `mongo_import_geonames.py` script to import Geonames's allCountries csv 
 
 Use the `python3` branch of Annie. Install by navigating to Annie's root directory and running `python setup.py install` with the `pubcrawler` virtualenv active.
 
-Annie uses some nltk components taht require running the following command in the virtualenv to install:
+Annie uses some nltk components that require running the following command in the virtualenv to install:
 
 ```
 python -c "import nltk; nltk.download('maxent_ne_chunker', 'maxent_treebank_pos_tagger', 'words', 'punkt', 'averaged_perceptron_tagger')"
 ```
+
+### Running on Aegypti.
+
+I'm going to start mongod with `mongod --fork --logpath ~/pubcrawler/mongodb.log --dbpath ~/data/db`.
+I'll shut it down with `mongod --shutdown`
+
+`crawler.py -x extract_disease_ontology_keywords -s meta -w 8 -c articlesubset`
+
+First I'll try:
+
+`cd pubcrawler` (The `dump` is there alongside `annie` and `pubcrawler`)
+`nohup mongorestore --gzip &`
+
+`nohup crawler.py -x extract_meta -s meta -w 18 -c articlesubset &`
+`crawler_count.py -x extract_meta -s meta -w 18 -c articlesubset`
+
+`nohup crawler.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset &`

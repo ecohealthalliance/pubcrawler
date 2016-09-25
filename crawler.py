@@ -38,9 +38,11 @@ def chunk_slices(length, by):
 
 def worker(url, db, collection, to_extract, query, index_queue):
     articles = pymongo.MongoClient()[db][collection]
+    cursor = articles.find(query)
+    print("Cursor count: {}".format(cursor.count()))
     for i in iter(index_queue.get, 'STOP'):
-        # print(i)
-        article = articles.find(query)[i]
+        print("Trying article {}.".format(i))
+        article = cursor[i]
         to_write = ex.combine_extracted_info(article, to_extract)
         articles.update_one({'_id': article['_id']}, {'$set': to_write})
 

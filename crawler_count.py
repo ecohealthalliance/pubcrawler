@@ -66,5 +66,5 @@ if __name__ == '__main__':
     while total_for_query != 0:
         total_for_query = articles.count(query)
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        print("At time {}, query {} matches {} articles.".format(now, query, total_for_query))
+        print("{}: Query \"{}\" matches {} articles.".format(now, query, total_for_query))
         time.sleep(5)
