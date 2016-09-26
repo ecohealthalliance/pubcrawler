@@ -98,12 +98,15 @@ if __name__ == '__main__':
     while remaining_articles > 0:
         print("Remaining articles: {}. Fetching next {}...".format(remaining_articles, batch_size))
         cursor = articles.find(query, ["_id"], limit=batch_size, no_cursor_timeout=True)
-
+        
+        print("Enqueueing...")
+        t1 = time.time()
         queue = mp.Queue()
         for i in cursor:
             queue.put(i)
         for w in range(num_workers):
             queue.put('STOP')
+        print("Queue construction time: {} seconds.".format(time.time()-t1))
 
         worker_args = (
             args.u,
