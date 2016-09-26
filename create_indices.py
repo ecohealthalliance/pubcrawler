@@ -43,7 +43,6 @@ if __name__ == '__main__':
 
     print("Making connection.")
     articles = pymongo.MongoClient(args.u)[args.d][args.c]
-    print(len(query))
 
     articles.create_index("index.meta")
     articles.create_index("index.keywords")
