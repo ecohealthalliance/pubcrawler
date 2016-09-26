@@ -39,7 +39,7 @@ def chunk_slices(length, by):
 def worker(url, db, collection, to_extract, query, index_queue):
     articles = pymongo.MongoClient()[db][collection]
     for i in iter(index_queue.get, 'STOP'):
-        print("Trying article {}.".format(i))
+        # print("Trying article {}.".format(i))
         article = articles.find_one(i)
         to_write = ex.combine_extracted_info(article, to_extract)
         articles.update_one(i, {'$set': to_write})
@@ -69,9 +69,9 @@ if __name__ == '__main__':
     parser.add_argument(
         "-l", "--limit", default=None, dest="l"
     )
-    # parser.add_argument(
-    #     "-b", "--batch_size", default=10000, dest="b"
-    # )
+    parser.add_argument(
+        "-b", "--batch_size", default=10000, dest="b"
+    )
     args = parser.parse_args()
     print(args)
 
@@ -86,18 +86,45 @@ if __name__ == '__main__':
     else:
         query = {}
 
+    batch_size = int(args.b)
+    num_workers = int(args.w)
+
     print("Making connection.")
     articles = pymongo.MongoClient(args.u)[args.d][args.c]
 
-    print("Getting IDs for query.")
-    cursor = articles.find(query, ["_id"], limit=0, no_cursor_timeout=True)
+    print("Counting...")
+    remaining_articles = articles.count(query)
 
-    num_workers = int(args.w)
-    queue = mp.Queue()
-    for i in cursor:
-        queue.put(i)
-    for w in range(num_workers):
-        queue.put('STOP')
+    while remaining_articles > 0:
+        print("Remaining articles: {}. Fetching next {}...".format(remaining_articles, batch_size))
+        cursor = articles.find(query, ["_id"], limit=batch_size, no_cursor_timeout=True)
+
+        queue = mp.Queue()
+        for i in cursor:
+            queue.put(i)
+        for w in range(num_workers):
+            queue.put('STOP')
+
+        worker_args = (
+            args.u,
+            args.d,
+            args.c,
+            extractor_funs,
+            query,
+            queue,
+        )
+
+        workers = [mp.Process(target=worker, args=worker_args) for w in range(num_workers)]
+        for w in workers:
+            w.start()
+
+        print("Workers started.")
+
+        for w in workers:
+            w.join()
+
+        print("Workers finished. Counting...")
+        remaining_articles = articles.count(query)
 
     # # Chunking, which we don't do any more.
     # queue = mp.Queue()
@@ -106,19 +133,6 @@ if __name__ == '__main__':
     # for w in range(num_workers):
     #     queue.put('STOP')
 
-    worker_args = (
-        args.u,
-        args.d,
-        args.c,
-        extractor_funs,
-        query,
-        queue,
-    )
-
-    print("About to start.")
-
-    for w in range(num_workers):
-        mp.Process(target=worker, args=worker_args).start()
 
     # while not queue.empty():
     #     print("Still going...")

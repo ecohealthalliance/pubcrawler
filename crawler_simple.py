@@ -36,45 +36,47 @@ def chunk_slices(length, by):
     slices = [slice(items[i], items[i+1]) for i in range(0, len(items)-1)]
     return(slices)
 
-def worker(url, db, collection, to_extract, query, index_queue):
+def worker(url, db, collection, to_extract, query, slice_queue):
     articles = pymongo.MongoClient()[db][collection]
-    for i in iter(index_queue.get, 'STOP'):
-        print("Trying article {}.".format(i))
-        article = articles.find_one(i)
-        to_write = ex.combine_extracted_info(article, to_extract)
-        articles.update_one(i, {'$set': to_write})
+    cursor = articles.find(query, modifiers={"$snapshot": True})
+    for s in iter(slice_queue.get, 'STOP'):
+        print(s)
+        bulk = articles.initialize_unordered_bulk_op()
+        for article in cursor[s]:
+            to_write = ex.combine_extracted_info(article, to_extract)
+            bulk.find({'_id': article['_id']}).update({'$set': to_write})
+        bulk.execute()
 
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-u", "--mongo_url", default="localhost", dest="u"
+        "-u", "--mongo_url", default="localhost", dest = "u"
     )
     parser.add_argument(
-        "-d", "--mongo_db", default="pmc", dest="d"
+        "-d", "--mongo_db", default="pmc", dest = "d"
     )
     parser.add_argument(
-        "-c", "--mongo_collection", default="articlesubset", dest="c"
+        "-c", "--mongo_collection", default="articlesubset", dest = "c"
     )
     parser.add_argument(
-        "-x", "--extract", action="append", default=None, dest="x"
+        "-x", "--extract", action="append", default=None, dest = "x"
     )
     parser.add_argument(
-        "-s", "--skip_field", default=None, dest="s"
+        "-s", "--skip_field", default=None, dest = "s"
     )
     parser.add_argument(
-        "-w", "--workers", default=4, dest="w"
+        "-w", "--workers", default=4, dest = "w"
     )
     parser.add_argument(
-        "-l", "--limit", default=None, dest="l"
+        "-l", "--limit", default=None, dest = "l"
     )
-    # parser.add_argument(
-    #     "-b", "--batch_size", default=10000, dest="b"
-    # )
+    parser.add_argument(
+        "-z", "--chunk_size", default=100, dest = "z"
+    )
     args = parser.parse_args()
     print(args)
-
     if args.x is not None:
         extractor_funs = [eval(x) for x in ['ex.' + x for x in args.x]]
     else:
@@ -88,23 +90,20 @@ if __name__ == '__main__':
 
     print("Making connection.")
     articles = pymongo.MongoClient(args.u)[args.d][args.c]
-
-    print("Getting IDs for query.")
-    cursor = articles.find(query, ["_id"], limit=0, no_cursor_timeout=True)
-
+    print("About to count.")
+    total_for_query = articles.count(query)
+    num_to_annotate = args.l if args.l is not None else total_for_query
     num_workers = int(args.w)
+    print("Total for query is {}.".format(total_for_query))
+    
+    print("About to chunk.")
+
     queue = mp.Queue()
-    for i in cursor:
+    for i in chunk_slices(num_to_annotate, by = args.z):
         queue.put(i)
     for w in range(num_workers):
         queue.put('STOP')
 
-    # # Chunking, which we don't do any more.
-    # queue = mp.Queue()
-    # for i in chunk_slices(num_to_annotate, by = 100):
-    #     queue.put(i)
-    # for w in range(num_workers):
-    #     queue.put('STOP')
 
     worker_args = (
         args.u,
