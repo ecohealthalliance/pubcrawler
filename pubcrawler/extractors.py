@@ -251,6 +251,7 @@ def strip_article_info(collection):
         {
         '$unset':
             {
+            'index': "",
             'meta': "",
             'keywords': "",
             'geonames': ""
