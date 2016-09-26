@@ -71,5 +71,5 @@ db.articles.createIndex({geonames: "hashed"}, {background: true})
 
 `nohup crawler.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset &`
 
-As of 2016-09-26 12:27 AM, running this command:
-`nohup python crawler_batches.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset -b 1000 &`
+As of 2016-09-26 12:06 PM, running this command:
+`nohup python crawler_batches.py -c articles -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s index.meta -w 18 -b 10000 &`
