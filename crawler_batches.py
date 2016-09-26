@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
         # print("Enqueueing...")
         # t1 = time.time()
-        # queue = mp.Queue()
+        queue = mp.Queue()
         for i in cursor:
             queue.put(i)
         for w in range(num_workers):
