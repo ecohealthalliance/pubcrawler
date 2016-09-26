@@ -95,6 +95,7 @@ def extract_disease_ontology_keywords(article):
     ]
     disease_ontology_keywords = None if len(infectious_diseases) == 0 else keywords_to_list(infectious_diseases)
     return({
+        'index.keywords': 1,
         'keywords':
         {
             'disease-ontology': disease_ontology_keywords
@@ -105,6 +106,7 @@ def extract_disease_ontology_keywords(article):
 def extract_meta(article):
     pc_article = pubcrawler.Article(article)
     return({
+        'index.meta': 1,
         'meta':
         {
             'article-ids': pc_article.pub_ids(),
@@ -213,6 +215,7 @@ def extract_geonames(article, store_all=False):
             culled_geonames.append(geoname_dict)
 
     return({
+        'index.geonames': 1,
         'geonames':
         {
             'all': all_geonames,
