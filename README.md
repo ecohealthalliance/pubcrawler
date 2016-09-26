@@ -57,7 +57,19 @@ First I'll try:
 `cd pubcrawler` (The `dump` is there alongside `annie` and `pubcrawler`)
 `nohup mongorestore --gzip &`
 
+This might be important:
+db.articles.createIndex({meta: "hashed"}, {background: true})
+db.articles.createIndex({keywords: "hashed"}, {background: true})
+db.articles.createIndex({geonames: "hashed"}, {background: true})
+
 `nohup crawler.py -x extract_meta -s meta -w 18 -c articlesubset &`
 `crawler_count.py -x extract_meta -s meta -w 18 -c articlesubset`
 
+`python crawler_batches.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset -b 1000`
+
+`python crawler_batches.py -x extract_disease_ontology_keywords -s meta -w 8 -c articlesubset -b 1000`
+
 `nohup crawler.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset &`
+
+As of 2016-09-26 12:27 AM, running this command:
+`nohup python crawler_batches.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset -b 1000 &`

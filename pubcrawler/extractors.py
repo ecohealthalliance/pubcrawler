@@ -121,7 +121,7 @@ def extract_meta(article):
 def geoname_annotator():
     return(GeonameAnnotator())
 
-def extract_geonames(article):
+def extract_geonames(article, store_all=False):
     pc_article = pubcrawler.Article(article)
     anno_doc = AnnoDoc(pc_article.body)
     candidate_locations = geoname_annotator().get_candidate_geonames(anno_doc)
@@ -179,23 +179,39 @@ def extract_geonames(article):
     #         else:
     #             break
 
-    props_to_omit = ['spans', 'alternateLocations']
-    # Get candidate geonameids and feature vectors
-    all_geonames = []
-    for location, feature in zip(candidate_locations, features):
-        geoname_dict = location
-        for prop in props_to_omit:
-            geoname_dict.pop(prop, None)
-#         geoname_dict['geonameid'] = location['geonameid']
-        geoname_dict['annie_features'] = feature.to_dict()
-        all_geonames.append(geoname_dict)
+    if store_all:
+        props_to_omit = ['spans', 'alternateLocations']
+        # Get candidate geonameids and feature vectors
+        all_geonames = []
+        for location, feature in zip(candidate_locations, features):
+            geoname_dict = location
+            for prop in props_to_omit:
+                geoname_dict.pop(prop, None)
+    #         geoname_dict['geonameid'] = location['geonameid']
+            geoname_dict['annie_features'] = feature.to_dict()
+            all_geonames.append(geoname_dict)
 
-    culled_geonames = []
-    for geospan in culled_geospans:
-        geoname = geospan.geoname
-        for prop in props_to_omit:
-            geoname.pop(prop, None)
-        culled_geonames.append(geospan.to_dict())
+        culled_geonames = []
+        for geospan in culled_geospans:
+            geoname = geospan.geoname
+            for prop in props_to_omit:
+                geoname.pop(prop, None)
+            culled_geonames.append(geospan.to_dict())
+
+    else:
+        all_geonames = []
+        for location, feature in zip(candidate_locations, features):
+            geoname_dict = {}
+            geoname_dict['geonameid'] = location['geonameid']
+            geoname_dict['annie_features'] = feature.to_dict()
+            all_geonames.append(geoname_dict)
+
+        culled_geonames = []
+        for geospan in culled_geospans:
+            geoname_dict = {}
+            geoname_dict['geonameid'] = geospan.geoname['geonameid']
+            culled_geonames.append(geoname_dict)
+
     return({
         'geonames':
         {
