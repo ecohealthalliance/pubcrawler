@@ -50,6 +50,11 @@ python -c "import nltk; nltk.download('maxent_ne_chunker', 'maxent_treebank_pos_
 I'm going to start mongod with `mongod --fork --logpath ~/pubcrawler/mongodb.log --dbpath ~/data/db`.
 I'll shut it down with `mongod --shutdown`
 
+Mongo often throws an error number 14. To fix that:
+```
+sudo chown `whoami` /tmp/mongodb-27017.sock
+```
+
 `crawler.py -x extract_disease_ontology_keywords -s meta -w 8 -c articlesubset`
 
 First I'll try:
@@ -73,3 +78,4 @@ db.articles.createIndex({geonames: "hashed"}, {background: true})
 
 As of 2016-09-26 12:06 PM, running this command:
 `nohup python crawler_batches.py -c articles -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s index.meta -w 18 -b 10000 &`
+`python crawler_count.py -c articles -s index.meta`

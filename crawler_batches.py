@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     while remaining_articles > 0:
         print("Remaining articles: {}. Fetching next {}...".format(remaining_articles, batch_size))
-        cursor = articles.find(query, ["_id"], limit=batch_size, no_cursor_timeout=True)
+        cursor = articles.find(query, ["_id"], limit=batch_size)
 
         # print("Enqueueing...")
         # t1 = time.time()
