@@ -33,12 +33,16 @@ class Article:
             text = None
         return(text)
 
+# Had to add the "except" here because otherwise it brings the whole script down.
     def pub_ids(self):
         pub_ids = {}
         for row in self.soup.front.find_all('article-id'):
-            pub_id_type = row['pub-id-type']
-            pub_id = row.get_text()
-            pub_ids[pub_id_type] = pub_id
+            try:
+                pub_id_type = row['pub-id-type']
+                pub_id = row.get_text()
+                pub_ids[pub_id_type] = pub_id
+            except:
+                print("pub_id error")
         return(pub_ids)
 
     def pub_dates(self):
