@@ -39,10 +39,12 @@ def chunk_slices(length, by):
 def worker(url, db, collection, to_extract, query, index_queue):
     articles = pymongo.MongoClient()[db][collection]
     for i in iter(index_queue.get, 'STOP'):
-        # print("Trying article {}.".format(i))
-        article = articles.find_one(i)
-        to_write = ex.combine_extracted_info(article, to_extract)
-        articles.update_one(i, {'$set': to_write})
+        try:
+            article = articles.find_one(i)
+            to_write = ex.combine_extracted_info(article, to_extract)
+            articles.update_one(i, {'$set': to_write})
+        except Exception as e:
+            print("Extraction error: {}".format(e))
 
 
 if __name__ == '__main__':
