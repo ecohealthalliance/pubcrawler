@@ -58,9 +58,9 @@ def resolve_keyword(keyword):
     """
     qres = list(get_disease_ontology().query(query))
     if len(qres) == 0:
-        # print("no match for", keyword.encode('ascii', 'xmlcharrefreplace'))
+        print("no match for", keyword.encode('ascii', 'xmlcharrefreplace'))
     elif len(qres) > 1:
-        # print("multiple matches for", keyword.encode('ascii', 'xmlcharrefreplace'))
+        print("multiple matches for", keyword.encode('ascii', 'xmlcharrefreplace'))
         print(qres)
     return qres
 
