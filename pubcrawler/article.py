@@ -33,12 +33,16 @@ class Article:
             text = None
         return(text)
 
+# Had to add the "except" here because otherwise it brings the whole script down.
     def pub_ids(self):
         pub_ids = {}
         for row in self.soup.front.find_all('article-id'):
-            pub_id_type = row['pub-id-type']
-            pub_id = row.get_text()
-            pub_ids[pub_id_type] = pub_id
+            try:
+                pub_id_type = row['pub-id-type']
+                pub_id = row.get_text()
+                pub_ids[pub_id_type] = pub_id
+            except:
+                print("pub_id error")
         return(pub_ids)
 
     def pub_dates(self):
@@ -79,16 +83,3 @@ class Article:
         else:
             article_type = None
         return(article_type)
-
-    def annotate_geonames(self, tag_name):
-        text = self.get_text_from_tags(tag_name)
-        self.annotations = annotator.AnnoDoc(text)
-        TokenAnnotator = token_annotator.TokenAnnotator(tokenizer=nltk.tokenize.RegexpTokenizer('\w+|[^\w\s]+'))
-        NgramAnnotator = ngram_annotator.NgramAnnotator()
-        NEAnnotator = ne_annotator.NEAnnotator()
-        GeonameAnnotator = geoname_annotator.GeonameAnnotator()
-        TokenAnnotator.annotate(self.annotations)
-        NgramAnnotator.annotate(self.annotations)
-        NEAnnotator.annotate(self.annotations)
-        GeonameAnnotator.annotate(self.annotations)
-        self.geonames = self.annotations.tiers['geonames']

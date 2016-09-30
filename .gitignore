@@ -61,5 +61,6 @@ target/
 # Jupyter Notebooks
 .ipynb_checkpoints
 
-# Data Directory
+# Data and Data Directory
 data/
+doid.owl

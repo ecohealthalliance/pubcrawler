@@ -29,12 +29,53 @@ mongodump --db pmc --collection articlesubset --gzip
 ```
 Restore this to a local database.
 
+Download the Disease Ontology OWL file: `curl http://www.berkeleybop.org/ontologies/doid.owl > doid.owl`
+
+### Geonames
+
+Use the `mongo_import_geonames.py` script to import Geonames's allCountries csv into a Mongo collection. Follow up by creating an index on `geonameid`.
+
 ### Annie
 
 Use the `python3` branch of Annie. Install by navigating to Annie's root directory and running `python setup.py install` with the `pubcrawler` virtualenv active.
 
-Annie uses some nltk components taht require running the following command in the virtualenv to install:
+Annie uses some nltk components that require running the following command in the virtualenv to install:
 
 ```
 python -c "import nltk; nltk.download('maxent_ne_chunker', 'maxent_treebank_pos_tagger', 'words', 'punkt', 'averaged_perceptron_tagger')"
 ```
+
+### Running on Aegypti.
+
+I'm going to start mongod with `mongod --fork --logpath ~/pubcrawler/mongodb.log --dbpath ~/data/db`.
+I'll shut it down with `mongod --shutdown`
+
+Mongo often throws an error number 14. To fix that:
+```
+sudo chown `whoami` /tmp/mongodb-27017.sock
+```
+
+`crawler.py -x extract_disease_ontology_keywords -s meta -w 8 -c articlesubset`
+
+First I'll try:
+
+`cd pubcrawler` (The `dump` is there alongside `annie` and `pubcrawler`)
+`nohup mongorestore --gzip &`
+
+This might be important:
+db.articles.createIndex({meta: "hashed"}, {background: true})
+db.articles.createIndex({keywords: "hashed"}, {background: true})
+db.articles.createIndex({geonames: "hashed"}, {background: true})
+
+`nohup crawler.py -x extract_meta -s meta -w 18 -c articlesubset &`
+`crawler_count.py -x extract_meta -s meta -w 18 -c articlesubset`
+
+`python crawler_batches.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset -b 1000`
+
+`python crawler_batches.py -x extract_disease_ontology_keywords -s meta -w 8 -c articlesubset -b 1000`
+
+`nohup crawler.py -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s meta -w 18 -c articlesubset &`
+
+As of 2016-09-26 12:06 PM, running this command:
+`nohup python crawler_batches.py -c articles -x extract_meta -x extract_disease_ontology_keywords -x extract_geonames -s index.meta -w 18 -b 10000 &`
+`python crawler_count.py -c articles -s index.meta`
