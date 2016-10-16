@@ -36,7 +36,7 @@ if __name__ == '__main__':
         "-d", "--mongo_db", default="pmc", dest = "d"
     )
     parser.add_argument(
-        "-c", "--mongo_collection", default="article", dest = "c"
+        "-c", "--mongo_collection", default="articles", dest = "c"
     )
     args = parser.parse_args()
 
