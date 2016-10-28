@@ -64,3 +64,6 @@ target/
 # Data and Data Directory
 data/
 doid.owl
+
+# Export directory
+export/

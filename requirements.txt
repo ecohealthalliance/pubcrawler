@@ -11,3 +11,4 @@ pymongo==3.3.0
 pyparsing==2.1.9
 rdflib==4.2.1
 unicodecsv==0.14.1
+pandas==0.19

@@ -36,7 +36,7 @@ if __name__ == '__main__':
         "-d", "--mongo_db", default="pmc", dest = "d"
     )
     parser.add_argument(
-        "-c", "--mongo_collection", default="articlesubset", dest = "c"
+        "-c", "--mongo_collection", default="articles", dest = "c"
     )
     args = parser.parse_args()
 
@@ -44,6 +44,7 @@ if __name__ == '__main__':
     print("Making connection.")
     articles = pymongo.MongoClient(args.u)[args.d][args.c]
 
-    articles.create_index("index.meta")
-    articles.create_index("index.keywords")
-    articles.create_index("index.geonames")
+    # articles.create_index("index.meta")
+    # articles.create_index("index.keywords")
+    # articles.create_index("index.geonames")
+    articles.create_index("index")
