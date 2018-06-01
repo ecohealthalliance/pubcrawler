@@ -1,14 +1,11 @@
-epitator
+
 beautifulsoup4==4.5.1
 geopy==1.11.0
 isodate==0.5.4
 lazy==1.2
-lxml==3.6.2
-nltk==3.2.1
-numpy==1.11.1
+lxml==3.4.4
 pylru==1.0.9
 pymongo==3.3.0
-pyparsing==2.1.9
-rdflib==4.2.1
 unicodecsv==0.14.1
 pandas==0.19
+epitator
