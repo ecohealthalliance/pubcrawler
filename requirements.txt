@@ -1,4 +1,4 @@
-annie==0.2.1
+epitator
 beautifulsoup4==4.5.1
 geopy==1.11.0
 isodate==0.5.4
