@@ -11,7 +11,7 @@ from annotator.geoname_annotator import GeoSpan
 from annotator.annotator import AnnoDoc
 import re
 import json
-import numpy
+
 
 @lrudecorator(1)
 def get_disease_ontology():
@@ -19,6 +19,7 @@ def get_disease_ontology():
     with open("doid.owl") as f:
         disease_ontology.parse(f, format="xml")
     return(disease_ontology)
+
 
 def get_annotation_keywords():
     qres = get_disease_ontology().query("""
@@ -39,8 +40,10 @@ def get_annotation_keywords():
         return label
     return list(set([remove_parenthetical_notes(str(r[1])) for r in qres]))
 
+
 def str_escape(s):
     return json.dumps(s)[1:-1]
+
 
 @lrudecorator(500)
 def resolve_keyword(keyword):
@@ -69,6 +72,7 @@ def resolve_keyword(keyword):
 def keyword_annotator():
     return(KeywordAnnotator(keywords=get_annotation_keywords()))
 
+
 def keywords_to_list(keywords):
     seen_keys = []
     keyword_list = []
@@ -84,6 +88,7 @@ def keywords_to_list(keywords):
             }
             keyword_list.append(keyword_dict)
     return(keyword_list)
+
 
 def extract_disease_ontology_keywords(article):
     pc_article = pubcrawler.Article(article)
@@ -117,11 +122,13 @@ def extract_meta(article):
         }
     })
 
+
 # This enables us to lazily call geoname_annotator() instead of having an
 # object that's instantiated every time the library is loaded.
 @lrudecorator(1)
 def geoname_annotator():
     return(GeonameAnnotator())
+
 
 def extract_geonames(article, store_all=False):
     pc_article = pubcrawler.Article(article)
