@@ -29,20 +29,16 @@ mongodump --db pmc --collection articlesubset --gzip
 ```
 Restore this to a local database.
 
-Download the Disease Ontology OWL file: `curl http://www.berkeleybop.org/ontologies/doid.owl > doid.owl`
+### EpiTator
 
-### Geonames
+The EpiTator library requires some external datasets to do geoname and disease resolution.
+Use the following commands to download them.
 
-Use the `mongo_import_geonames.py` script to import Geonames's allCountries csv into a Mongo collection. Follow up by creating an index on `geonameid`.
-
-### Annie
-
-Use the `python3` branch of Annie. Install by navigating to Annie's root directory and running `python setup.py install` with the `pubcrawler` virtualenv active.
-
-Annie uses some nltk components that require running the following command in the virtualenv to install:
-
-```
-python -c "import nltk; nltk.download('maxent_ne_chunker', 'maxent_treebank_pos_tagger', 'words', 'punkt', 'averaged_perceptron_tagger')"
+```bash
+pip install epitator
+python -m spacy download en_core_web_sm
+python -m epitator.importers.import_geonames
+python -m epitator.importers.import_disease_ontology
 ```
 
 ### Running on Aegypti.
