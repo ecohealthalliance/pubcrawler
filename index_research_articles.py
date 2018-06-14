@@ -1,6 +1,4 @@
 from pymongo import MongoClient
-# from annotator.keyword_annotator import KeywordAnnotator
-# from annotator.geoname_annotator import GeonameAnnotator
 
 if __name__ == '__main__':
     import argparse

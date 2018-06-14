@@ -1,8 +1,6 @@
 from bs4 import BeautifulSoup
 import lxml
 from datetime import date
-from annotator import annotator, geoname_annotator, ngram_annotator, token_annotator, ne_annotator
-import nltk
 
 """ This class represents an article or publication from PubMed Central. To
 instantiate, pass a dict containing the elements `_id` and `nxml`, the latter

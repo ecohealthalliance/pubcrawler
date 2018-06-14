@@ -24,8 +24,6 @@ import multiprocessing as mp
 import time
 import sys
 import pymongo
-# from annotator.keyword_annotator import KeywordAnnotator
-# from annotator.geoname_annotator import GeonameAnnotator
 import pubcrawler.extractors as ex
 
 
@@ -37,7 +35,7 @@ def chunk_slices(length, by):
     return(slices)
 
 def worker(url, db, collection, to_extract, query, index_queue):
-    articles = pymongo.MongoClient()[db][collection]
+    articles = pymongo.MongoClient(url)[db][collection]
     for i in iter(index_queue.get, 'STOP'):
         try:
             article = articles.find_one(i)
