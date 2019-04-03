@@ -59,7 +59,7 @@ class Article:
     """
     def article_title(self):
         if self.soup.front.find('article-title') is not None:
-            article_title = self.soup.front.find('article-title').get_text
+            article_title = self.soup.front.find('article-title').get_text()
         else:
             article_title = None
         return(article_title)
