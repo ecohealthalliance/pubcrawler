@@ -2,19 +2,17 @@ from bs4 import BeautifulSoup
 import lxml
 from datetime import date
 
-""" This class represents an article or publication from PubMed Central. To
-instantiate, pass a dict containing the elements `_id` and `nxml`, the latter
-being the contents of the .nxml file from the PMC OAS. Conveniently, this is
-what you get when you read an article out of the Mongo database created by the
-`mongo_import_pmc_oas_local.py` script. 
+"""
+This class provides methods for dealing with journal articles stored as
+XML documents using the NLM's Journal Article Tag Suite.
 
-This class is going to serve as a base class. Subclasses will provide
-different methods to extract GeoNames from this."""
+Instantiate by passing the contents of an article's XML as a string.
+"""
 class Article:
     
-    def __init__(self, nxml):
-        self.nxml = nxml
-        self.soup = BeautifulSoup(self.nxml, 'lxml-xml')
+    def __init__(self, xml):
+        self.xml = xml
+        self.soup = BeautifulSoup(self.xml, 'lxml-xml')
         # self._id = article_dict['_id']
 
     def pub_ids(self):
@@ -63,8 +61,10 @@ class Article:
             article_type = None
         return(article_type)
 
-    def extract_text(self, from_tag="body"):
-        strings = [string for string in self.soup.find("body").strings]
+    def extract_text(self, from_tag=None):
+        if from_tag is None:
+            from_tag = "body" if self.soup.body else "article"
+        strings = [string for string in self.soup.find(from_tag).strings]
         text = ""
 
         last_tag_name = ""
