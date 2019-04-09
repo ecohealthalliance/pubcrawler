@@ -43,6 +43,13 @@ class Article:
             article_title = None
         return(article_title)
 
+    def journal_title(self):
+        if self.soup.front.find('journal-title') is not None:
+            journal_title = self.soup.front.find('journal-title').get_text()
+        else:
+            journal_title = None
+        return(journal_title)
+
     """
     The keywords method returns a list of keyword tags in the article. By default, it is restricted to keywords in the <front> element, but the "containing_tag" argument can be passed "" to search all. In the test set of 1000 articles, only 1 had keywords not in front matter. 503 had any keywords at.
     """
