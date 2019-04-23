@@ -8,8 +8,10 @@ XML documents using the NLM's Journal Article Tag Suite.
 
 Instantiate by passing the contents of an article's XML as a string.
 """
+
+
 class Article:
-    
+
     def __init__(self, xml):
         self.xml = xml
         self.soup = BeautifulSoup(self.xml, 'lxml-xml')
@@ -101,6 +103,8 @@ class Article:
                     # If we're in a new table cell, insert a tab character
                     elif not all(x in last_cell for x in cell):
                         text += "\t" + string
+                    else:
+                        text += string
             elif "fig" in parent_names:
                 fig = [parent for parent in parents if parent.name == "fig"]
                 last_fig = [parent for parent in last_parents if parent.name == "fig"]
@@ -108,6 +112,22 @@ class Article:
                     text += "\n\n" + string
                 elif "label" in last_parent_names:
                     text += " " + string
+                else:
+                    text += string
+            elif "disp-formula" in parent_names:
+                formula = [parent for parent in parents if parent.name == "disp-formula"]
+                last_formula = [parent for parent in last_parents if parent.name == "disp-formula"]
+                math = [parent for parent in parents if parent.name == "mml:math"]
+                last_math = [parent for parent in last_parents if parent.name == "mml:math"]
+                mrow = [parent for parent in parents if parent.name == "mml:mrow"]
+                last_mrow = [parent for parent in last_parents if parent.name == "mml:mrow"]
+                # If we're in a new formula, mml:math, or mml:mrow, insert new lines.
+                if not all(x in last_formula for x in formula):
+                    text += "\n\n" + string
+                elif not all(x in last_math for x in math):
+                    text += "\n" + string
+                elif not all(x in last_mrow for x in mrow):
+                    text += "\n" + string
                 else:
                     text += string
             elif any(x in ["p", "title"] for x in parent_names):

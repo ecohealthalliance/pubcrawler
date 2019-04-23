@@ -27,13 +27,6 @@ import pymongo
 import pubcrawler.extractors as ex
 
 
-def chunk_slices(length, by):
-    items = list(range(0, length + 1, by))
-    if length % by != 0:
-        items.append(length)
-    slices = [slice(items[i], items[i+1]) for i in range(0, len(items)-1)]
-    return(slices)
-
 def worker(url, db, collection, to_extract, query, index_queue):
     articles = pymongo.MongoClient(url)[db][collection]
     for i in iter(index_queue.get, 'STOP'):
@@ -130,20 +123,3 @@ if __name__ == '__main__':
         remaining_articles = articles.count(query)
 
     print("Finished.")
-
-    # # Chunking, which we don't do any more.
-    # queue = mp.Queue()
-    # for i in chunk_slices(num_to_annotate, by = 100):
-    #     queue.put(i)
-    # for w in range(num_workers):
-    #     queue.put('STOP')
-
-
-    # while not queue.empty():
-    #     print("Still going...")
-    #     # total_for_query_now = articles.count(query)
-    #     # done = total_for_query - total_for_query_now
-    #     # left = num_to_annotate - done
-    #     # print("Annotated {} out of {} articles ({:.2%}). {} remaining.".format(done,
-    #         # num_to_annotate, done / num_to_annotate, left))
-    #     time.sleep(5)
