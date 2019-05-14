@@ -81,7 +81,7 @@ class Article:
         last_parent_names = []
         last_depth = 0
 
-        for string in strings:
+        for i, string in enumerate(strings):
             tag_name = string.parent.name
             parents = list(string.parents)
             parent_names = [parent.name for parent in parents]
@@ -130,6 +130,22 @@ class Article:
                     text += "\n" + string
                 else:
                     text += string
+            elif "sup" in parent_names:
+                # We have to peek at next parents to do this right.
+                next_parents = list(strings[(i + 1) % len(strings)].parents)
+                next_parent_names = [parent.name for parent in next_parents]
+                if "xref" in parent_names:
+                    if "sup" not in last_parent_names:
+                        text += " ["
+                    text += string
+                    if "sup" not in next_parent_names:
+                        text += "]"
+                elif "sup" not in last_parent_names:
+                    text += "^" + string
+                else:
+                    text += string
+            elif "sub" in parent_names and "sub" not in last_parent_names:
+                text += "_" + string
             elif any(x in ["p", "title"] for x in parent_names):
                 par = [parent for parent in parents if parent.name in ["p", "title"]]
                 last_par = [parent for parent in last_parents if parent.name in ["p", "title"]]
