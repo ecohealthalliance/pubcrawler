@@ -11,56 +11,60 @@ Instantiate by passing the contents of an article's XML as a string.
 
 
 class Article:
-
     def __init__(self, xml):
         self.xml = xml
-        self.soup = BeautifulSoup(self.xml, 'lxml-xml')
+        self.soup = BeautifulSoup(self.xml, "lxml-xml")
         # self._id = article_dict['_id']
 
     def pub_ids(self):
         pub_ids = {}
-        for row in self.soup.front.find_all('article-id'):
+        for row in self.soup.front.find_all("article-id"):
             try:
-                pub_id_type = row['pub-id-type']
+                pub_id_type = row["pub-id-type"]
                 pub_id = row.get_text()
                 pub_ids[pub_id_type] = pub_id
             except:
                 print("Could not find pub_ids for document.")
-        return(pub_ids)
+        return pub_ids
 
     def pub_dates(self):
         pub_dates = {}
-        for row in self.soup.front.find_all('pub-date'):
-            pub_type = row['pub-type']
+        for row in self.soup.front.find_all("pub-date"):
+            pub_type = row["pub-type"]
             year = int(row.year.get_text()) if row.year is not None else 1
             month = int(row.month.get_text()) if row.month is not None else 1
             day = int(row.day.get_text()) if row.day is not None else 1
             pub_dates[pub_type] = date(year, month, day)
-        return(pub_dates)
+        return pub_dates
 
     def article_title(self):
-        if self.soup.front.find('article-title') is not None:
-            article_title = self.soup.front.find('article-title').get_text()
+        if self.soup.front.find("article-title") is not None:
+            article_title = self.soup.front.find("article-title").get_text()
         else:
             article_title = None
-        return(article_title)
+        return article_title
 
     def journal_title(self):
-        if self.soup.front.find('journal-title') is not None:
-            journal_title = self.soup.front.find('journal-title').get_text()
+        if self.soup.front.find("journal-title") is not None:
+            journal_title = self.soup.front.find("journal-title").get_text()
         else:
             journal_title = None
-        return(journal_title)
+        return journal_title
 
     """
-    The keywords method returns a list of keyword tags in the article. By default, it is restricted to keywords in the <front> element, but the "containing_tag" argument can be passed "" to search all. In the test set of 1000 articles, only 1 had keywords not in front matter. 503 had any keywords at.
+    The keywords method returns a list of keyword tags in the article. By
+    default, it is restricted to keywords in the <front> element, but the
+    "containing_tag" argument can be passed "" to search all. In the test set
+    of 1000 articles, only 1 had keywords not in front matter. 503 had any
+    keywords at.
     """
+
     def keywords(self, from_tag="front"):
         keyword_tags = self.soup.find(from_tag).find_all("kwd")
         keywords = []
         for tag in keyword_tags:
             keywords.append(tag.get_text())
-        return(keywords)
+        return keywords
 
     def article_type(self):
         article_tag = self.soup.find("article")
@@ -68,7 +72,7 @@ class Article:
             article_type = article_tag.get("article-type")
         else:
             article_type = None
-        return(article_type)
+        return article_type
 
     def extract_text(self, from_tag=None):
         if from_tag is None:
@@ -90,13 +94,18 @@ class Article:
             if string == "\n":
                 continue
             elif "table-wrap" in parent_names:
-                if tag_name in ["label", "caption"] or last_tag_name == ["label", "caption"]:
+                if tag_name in ["label", "caption"] or last_tag_name == [
+                    "label",
+                    "caption",
+                ]:
                     text += "\n\n" + string
                 if any(x in ["tr"] for x in parent_names):
                     tr = [parent for parent in parents if parent.name == "tr"]
                     last_tr = [parent for parent in last_parents if parent.name == "tr"]
                     cell = [parent for parent in parents if parent.name in ["th", "td"]]
-                    last_cell = [parent for parent in last_parents if parent.name in ["th", "td"]]
+                    last_cell = [
+                        parent for parent in last_parents if parent.name in ["th", "td"]
+                    ]
                     # If we're in a new table row, insert a carriage return.
                     if not all(x in last_tr for x in tr):
                         text += "\n" + string
@@ -115,12 +124,20 @@ class Article:
                 else:
                     text += string
             elif "disp-formula" in parent_names:
-                formula = [parent for parent in parents if parent.name == "disp-formula"]
-                last_formula = [parent for parent in last_parents if parent.name == "disp-formula"]
+                formula = [
+                    parent for parent in parents if parent.name == "disp-formula"
+                ]
+                last_formula = [
+                    parent for parent in last_parents if parent.name == "disp-formula"
+                ]
                 math = [parent for parent in parents if parent.name == "mml:math"]
-                last_math = [parent for parent in last_parents if parent.name == "mml:math"]
+                last_math = [
+                    parent for parent in last_parents if parent.name == "mml:math"
+                ]
                 mrow = [parent for parent in parents if parent.name == "mml:mrow"]
-                last_mrow = [parent for parent in last_parents if parent.name == "mml:mrow"]
+                last_mrow = [
+                    parent for parent in last_parents if parent.name == "mml:mrow"
+                ]
                 # If we're in a new formula, mml:math, or mml:mrow, insert new lines.
                 if not all(x in last_formula for x in formula):
                     text += "\n\n" + string
@@ -148,7 +165,9 @@ class Article:
                 text += "_" + string
             elif any(x in ["p", "title"] for x in parent_names):
                 par = [parent for parent in parents if parent.name in ["p", "title"]]
-                last_par = [parent for parent in last_parents if parent.name in ["p", "title"]]
+                last_par = [
+                    parent for parent in last_parents if parent.name in ["p", "title"]
+                ]
                 if not all(x in last_par for x in par):
                     # Add more whitespace before titles
                     text += "\n\n" + string if tag_name == "p" else "\n\n\n" + string
@@ -164,4 +183,4 @@ class Article:
             last_parent_names = parent_names
             last_depth = depth
 
-        return(text)
+        return text
