@@ -74,7 +74,7 @@ class Article:
             article_type = None
         return article_type
 
-    def extract_text(self, from_tag=None):
+    def extract_text(self, from_tag=None, include_tables=False):
         if from_tag is None:
             from_tag = "body" if self.soup.body else "article"
         strings = [string for string in self.soup.find(from_tag).strings]
@@ -90,30 +90,35 @@ class Article:
             parents = list(string.parents)
             parent_names = [parent.name for parent in parents]
             depth = len(parents)
-
             if string == "\n":
                 continue
             elif "table-wrap" in parent_names:
-                if tag_name in ["label", "caption"] or last_tag_name == [
-                    "label",
-                    "caption",
-                ]:
-                    text += "\n\n" + string
-                if any(x in ["tr"] for x in parent_names):
-                    tr = [parent for parent in parents if parent.name == "tr"]
-                    last_tr = [parent for parent in last_parents if parent.name == "tr"]
-                    cell = [parent for parent in parents if parent.name in ["th", "td"]]
-                    last_cell = [
-                        parent for parent in last_parents if parent.name in ["th", "td"]
-                    ]
-                    # If we're in a new table row, insert a carriage return.
-                    if not all(x in last_tr for x in tr):
-                        text += "\n" + string
-                    # If we're in a new table cell, insert a tab character
-                    elif not all(x in last_cell for x in cell):
-                        text += "\t" + string
-                    else:
-                        text += string
+                if not include_tables:
+                    if "table-wrap" not in last_parent_names:
+                        text += "\n\n[Omitted Table: '" + string.strip(",.") + "']\n\n"\
+                            if "label" in parent_names else "\n\n[Omitted Table]\n\n"
+
+                else:
+                    if tag_name in ["label", "caption"] or last_tag_name == [
+                        "label",
+                        "caption",
+                    ]:
+                        text += "\n\n" + string
+                    if any(x in ["tr"] for x in parent_names):
+                        tr = [parent for parent in parents if parent.name == "tr"]
+                        last_tr = [parent for parent in last_parents if parent.name == "tr"]
+                        cell = [parent for parent in parents if parent.name in ["th", "td"]]
+                        last_cell = [
+                            parent for parent in last_parents if parent.name in ["th", "td"]
+                        ]
+                        # If we're in a new table row, insert a carriage return.
+                        if not all(x in last_tr for x in tr):
+                            text += "\n" + string
+                        # If we're in a new table cell, insert a tab character
+                        elif not all(x in last_cell for x in cell):
+                            text += "\t" + string
+                        else:
+                            text += string
             elif "fig" in parent_names:
                 fig = [parent for parent in parents if parent.name == "fig"]
                 last_fig = [parent for parent in last_parents if parent.name == "fig"]
